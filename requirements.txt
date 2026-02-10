@@ -1,0 +1,33 @@
+
+from transformers import AutoTokenizer, AutoModel
+import torch
+
+
+model_name = "distilbert-base-multilingual-cased"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
+
+
+kalimat1 = "Dia bisa berlari dengan cepat"
+kalimat2 = "Aku memiliki dua apel"
+
+def get_embedding(kalimat, kata_target):
+    inputs = tokenizer(kalimat, return_tensors="pt")
+    outputs = model(**inputs)
+    
+    
+    token_list = tokenizer.tokenize(kalimat)
+    idx = token_list.index(kata_target)
+    
+    
+    return outputs.last_hidden_state[0, idx+1, :] # +1 karena ada token [CLS] di awal
+
+
+vektor1 = get_embedding(kalimat1, "bisa")
+vektor2 = get_embedding(kalimat2, "memiliki")
+
+
+cos = torch.nn.CosineSimilarity(dim=0)
+similarity = cos(vektor1, vektor2)
+
+print(f"Kemiripan kata 'bisa' antar kedua kalimat: {similarity.item():.4f}")
